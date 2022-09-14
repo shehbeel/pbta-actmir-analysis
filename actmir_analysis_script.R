@@ -11,17 +11,26 @@ cutoff=0.35
 
 # Run actMir analysis
 source("./Infer_miRactivity_forBioinformatics.R")
-miRact <- InfermiRactivity(miRNA, miRexpr, expr, target, cutoff)
 
-# Export activity scores with PBTA metadata
-samples <- met$short_histology
-rownames(miRact) <- samples
+mirnas <- row.names(miRexpr)
+df <- data.frame(matrix(nrow = 244, ncol=0))
+row.names(df) <- colnames(miRexpr)
+counter <- 0 # Using a counter to let me know when each loop is complete, so I can have runtime reference
 
-met2 <- met[order(met$sample_id),] # Order the dataframe based on "sample_id" column
-ordered_samples <- miRact[order(names(miRact))] # Order the list based on "sample_id"
-met2$activity_score <- ordered_samples
+for (i in mirnas)
+{
+  miRact <- InfermiRactivity(i, miRexpr, expr, target, cutoff)
+  #print(miRact)
+  df[i] <- cbind(miRact, df)
+  counter = counter + 1
+  print(counter)
+}
 
-write_csv(met2, "pbta_miRactivity_results.csv")
+final.df <- cbind(met, df)
+
+# Export inferred miRNA Activity Scores dataframe
+write.csv(final.df, "pbta_miRactivity_results.csv", row.names=FALSE)
+
 
 
 ### EXAMPLE RUN ###
